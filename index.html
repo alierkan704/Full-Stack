@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dikdörtgenler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .dikdortgen1,
+        .kart {
+            width: 8cm;
+            height: 15cm;
+            border: 2px solid #000;
+            background-color: transparent;
+            position: relative;     
+            border-radius: 1cm; /* Kenarları oval yapmak için */
+        }
+
+        .dikdortgen2 {
+            width: 8cm;
+            height: 1.82cm;
+            border: 2px solid #000;
+            background-color: transparent;
+            position: absolute;
+            right:-0.04cm;
+            top: -1.14cm;
+            border-bottom: none;
+            
+         
+        }
+
+        .baslik {
+    display: block;
+    cursor: pointer;
+    position: absolute;
+    top: -1cm;
+    right: 0.5cm;
+    border: 1px dashed transparent;
+    font-size: 25px;
+    font-weight: bold;
+    width: 7cm;
+    white-space: nowrap; /* Metni bir satırla sınırla */
+    overflow: hidden; /* Metin taşmasını engellemek için */
+    text-overflow: ellipsis; /* Metni kes ve üç nokta ile göster */
+}
+
+
+        .baslik:focus {
+            outline: none;
+            border: 1px dashed #000;
+        }
+        .aciklama {
+    display: block;
+    cursor: pointer;
+    position: absolute;
+    top: 0.25cm;
+    right: 0.50cm;
+    border: 1px dashed transparent;
+    width: 7cm;
+    max-height: 7em; /* Maksimum 7 satıra sınırlama */
+    overflow: hidden;
+    word-wrap: break-word;
+    font-weight: bold;
+    white-space: pre-wrap; /* Metni otomatik olarak bir sonraki satıra taşı ve boşlukları koru */
+    
+}
+
+
+
+        .aciklama:focus {
+            outline: none;
+            border: 1px dashed #000;
+        }
+
+        .kare,
+        .kart-kare {
+            width: 6cm;
+            height: 6cm;
+            border: 2px solid #000;
+            background-color: pink;
+            position: absolute;
+            top: 6.5cm;
+            left: 1cm;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .kare img,
+        .kart-kare img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .arti-buton {
+            font-size: 80px;
+            cursor: pointer;
+        }
+
+        .onay-buton {
+            font-size: 50px;
+            cursor: pointer;
+            color: gray;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            transition: color 0.3s;
+        }
+
+        .onay-buton.aktif {
+            color: green;
+        }
+
+        .kart {
+            width: 6cm;
+            height: 12cm;
+            border: 2px solid #000;
+            background-color: transparent;
+            position: absolute;
+            /* Yeni kartı ilk kartın altına taşı */
+            top: calc(100% + 2cm);
+            /* Yeni kartı ilk kartın sağına taşı */
+            left: 4cm;
+            padding: 1cm;
+        }
+
+        .kart .kart-baslik,
+        .kart .kart-aciklama,
+        .kart .kart-kare {
+            margin-left: 1cm;
+        }
+
+        .kart .kart-baslik {
+            top: -1cm;
+            left: 0;
+            white-space: nowrap; /* Metni bir satırla sınırla */
+            overflow: hidden; /* Metin taşmasını engellemek için */
+            text-overflow: ellipsis; /* Metni kes ve üç nokta ile göster */
+            word-wrap: break-word; /* Metni alt satıra taşı */
+            margin-bottom: 0.5cm;
+        }
+
+        .kart .kart-aciklama {
+    top: 0.5cm; /* Açıklamayı başlıktan 0.5cm aşağıda başlatmak için */
+    margin-left: -0.5cm; /* Açıklamayı 2cm sola kaydırmak için istediğiniz miktarı ayarlayabilirsiniz */
+    overflow: hidden;
+    word-wrap: break-word;
+    white-space: normal;
+    text-align: left; /* Açıklamanın metin hizalamasını "left" olarak ayarlar */
+}
+
+
+        .kart .kart-kare {
+            top: 6.5cm;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dikdortgen1">
+        <div class="dikdortgen2"></div>
+        <div class="baslik" contenteditable="true" tabindex="0" onblur="updateTitle(this)">New Title</div>
+        <div class="aciklama" contenteditable="true" tabindex="0" onkeydown="handleDescriptionKeyPress(event, this)" data-multiline="true">New Description</div>
+        <div class="kare">
+            <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="handleFileSelect(this)">
+            <label for="fileInput" class="arti-buton">+</label>
+        </div>
+        <div class="onay-buton" onclick="createCard()">✓</div>
+    </div>
+
+    <script>
+        let kartCount = 0;
+        let isConfirmationActive = false;
+
+        function updateTitle(element) {
+            const newText = element.textContent.trim();
+            if (newText === "") {
+                element.textContent = "New Title";
+            }
+            toggleConfirmation();
+        }
+
+        function handleDescriptionKeyPress(event, element) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const br = document.createElement("br");
+        range.insertNode(br);
+        range.setStartAfter(br);
+        range.setEndAfter(br);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        toggleConfirmation();
+    }
+}
+
+        function selectText(element) {
+            if (document.body.createTextRange) {
+                var range = document.body.createTextRange();
+                range.moveToElementText(element);
+                range.select();
+            } else if (window.getSelection) {
+                var selection = window.getSelection();
+                var range = document.createRange();
+                range.selectNodeContents(element);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+
+        document.querySelector(".aciklama").addEventListener("click", function () {
+            selectText(this);
+        });
+
+        document.querySelector(".baslik").addEventListener("click", function () {
+            selectText(this);
+        });
+
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const image = new Image();
+                    image.src = e.target.result;
+                    image.onload = function () {
+                        const kare = document.querySelector(".kare");
+                        kare.innerHTML = "";
+                        kare.appendChild(image);
+                        toggleConfirmation();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleConfirmation() {
+            const onayButon = document.querySelector(".onay-buton");
+            const kare = document.querySelector(".kare");
+            const baslik = document.querySelector(".baslik");
+            const aciklama = document.querySelector(".aciklama");
+
+            if (kare.innerHTML.trim() !== "" && baslik.textContent.trim() !== "New Title" && aciklama.textContent.trim() !== "New Description") {
+                isConfirmationActive = true;
+                onayButon.classList.add("aktif");
+            } else {
+                isConfirmationActive = false;
+                onayButon.classList.remove("aktif");
+            }
+        }
+
+        function createCard() {
+    if (!isConfirmationActive) {
+        return;
+    }
+
+    const kart = document.createElement("div");
+    kart.classList.add("kart");
+
+    const kartBaslik = document.createElement("div");
+    kartBaslik.classList.add("kart-baslik");
+    kartBaslik.textContent = document.querySelector(".baslik").textContent;
+
+    const kartAciklama = document.createElement("div");
+    kartAciklama.classList.add("kart-aciklama");
+    const aciklamaHtml = document.querySelector(".aciklama").innerHTML;
+    const aciklamaLines = aciklamaHtml.split('<br>').filter(line => line.trim() !== '');
+
+    if (aciklamaLines.length > 7) {
+        const truncatedLines = aciklamaLines.slice(0, 7);
+        kartAciklama.innerHTML = truncatedLines.join('<br>') + '...';
+    } else {
+        kartAciklama.innerHTML = aciklamaHtml;
+    }
+
+    kartBaslik.style.fontWeight = "bold";
+    kartBaslik.style.fontSize = "30px";
+    kartAciklama.style.fontWeight = "bold";
+    kartAciklama.style.fontSize = "16px";
+
+    const kartResim = document.createElement("div");
+    kartResim.classList.add("kart-kare");
+    const kareResim = document.querySelector(".kare img").cloneNode(true);
+    kartResim.appendChild(kareResim);
+
+    kart.appendChild(kartBaslik);
+    kart.appendChild(kartAciklama);
+    kart.appendChild(kartResim);
+
+    document.querySelector(".baslik").textContent = "New Title";
+    document.querySelector(".aciklama").innerHTML = "New Description";
+    const kare = document.querySelector(".kare");
+    kare.innerHTML = '<input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="handleFileSelect(this)"><label for="fileInput" class="arti-buton">+</label>';
+    toggleConfirmation();
+
+    const firstKart = document.querySelector(".dikdortgen1");
+    firstKart.insertAdjacentElement("afterend", kart);
+    kart.style.top = "20cm";
+    kart.style.left = "17cm";
+    kart.style.top = `calc(${2 + (18 * kartCount)}cm + 100%)`;
+
+    kartCount++;
+}
+
+    </script>
+</body>
+</html>
+

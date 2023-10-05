@@ -1,0 +1,4 @@
+{
+    "docker.portForwarding.sourcePort": 5439, // Dışarıdan erişmek istediğiniz port
+    "docker.portForwarding.forwardPort": 5432 // PostgreSQL içindeki port
+}
